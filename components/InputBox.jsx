@@ -1,12 +1,41 @@
 import { useSession } from "next-auth/react";
 import Image from "next/image";
-import React from "react";
+import React,{useRef,useEffect,useState} from "react";
 import { EmojiHappyIcon } from "@heroicons/react/outline";
 import { CameraIcon, VideoCameraIcon } from "@heroicons/react/solid";
+import { db } from "../firebase";
+import { addDoc, collection, getDoc, getDocs, serverTimestamp} from "firebase/firestore"; 
+
+
 const InputBox = () => {
+  const [state,setState ] = useState([]);
   const session = useSession();
-  const sendPost = (e) => {
+
+  const inputRef = useRef(null)
+  const postRefCollection = collection(db,'posts');
+  
+  // const getUsers = async () => {
+  //   const data = await getDocs(postRefCollection);
+  //   setState(data.docs.map((doc) => ({...doc.data(),id:doc.id})))
+  // }
+  
+
+  const sendPost = async (e) => {
+
     e.preventDefault();
+
+    if(!inputRef.current.value) return;
+    await addDoc(postRefCollection,{
+      message: inputRef.current.value,
+      name: session &&  session.data.user?.name,
+      email: session &&  session.data.user?.email,
+      image: session &&  session.data.user?.image,
+      timestamp: serverTimestamp(),
+    })
+    // db.collection("posts").add(docData);
+
+    inputRef.current.value = ''
+
   };
   return (
     <div className="bg-white p-2 rounded-2xl shadow-md text-gray-500 font-medium mt-6">
@@ -20,6 +49,7 @@ const InputBox = () => {
         />
         <form className="flex flex-1">
           <input
+            ref={inputRef}
             type="text"
             className="rounded-full h-12 bg-gray-100 flex-grow px-5 outline-none"
             placeholder={`what's on your mind ${session.data.user.name}`}
@@ -49,7 +79,6 @@ const InputBox = () => {
             <p className="text-xs sm:text-sm xl:text-base">Feeling/Activity</p>
         </div>
     </div>
-
     </div>
   );
 };
