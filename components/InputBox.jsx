@@ -16,7 +16,7 @@ import {
 import {
   getDownloadURL,
   ref,
-  uploadBytesResumable,
+  uploadBytes,
   uploadString,
 } from "firebase/storage";
 import { async } from "@firebase/util";
@@ -36,7 +36,7 @@ const InputBox = () => {
 
   const sendPost = async (e) => {
     e.preventDefault();
-    const postsRef = ref(storage, "posts");
+    // const postsRef = ref(storage, `posts/${doc.id}`);
 
     if (!inputRef.current.value) return;
     const sendData = await addDoc(postRefCollection, {
@@ -45,61 +45,54 @@ const InputBox = () => {
       email: session && session.data.user?.email,
       image: session && session.data.user?.image,
       timestamp: serverTimestamp(),
-    }).then((doc) => {
+    }).then(async (doc) => {
       if (imagetoPost) {
         // const uploadTask = storage.ref(`posts/${doc.id}`).putString(imagetoPost,'data_url');
-        const storageRef = ref(storage, `posts/${doc.id}`);
-        const message = "This is testing";
-        // const uploadTask = uploadString(postsRef,'posts').then((snapshot ) => {
-        //   console.log('Uploaded a raw string!');
-        // })
-        const uploadTask = uploadBytesResumable(storageRef, imagetoPost);
+        const storageRef = ref(storage, `/posts/${doc.id}`);
+        const metadata = {
+          contentType: "image/jpeg",
+        };
 
+        const message4 =
+          "data:text/plain;base64,5b6p5Y+344GX44G+44GX44Gf77yB44GK44KB44Gn44Go44GG77yB";
+        const uploadTask = await uploadString(storageRef, message4, "data_url")
+        console.log(uploadTask);
+        alert("Image Uploaded Success");
+        // uploadTask.on(
+        //   "state_changed",
+        //   (snapshot) => {
+        //     const progress =
+        //       (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        //     console.log("Upload is " + progress + "% done");
+        //     switch (snapshot.state) {
+        //       case "paused":
+        //         console.log("Upload is paused");
+        //         break;
+        //       case "running":
+        //         console.log("Upload is running");
+        //         break;
+        //     }
 
-        uploadTask.on(
-          "state_changed",
-          (snapshot) => {
-            const progress =
-              (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-            console.log("Upload is " + progress + "% done");
-            switch (snapshot.state) {
-              case "paused":
-                console.log("Upload is paused");
-                break;
-              case "running":
-                console.log("Upload is running");
-                break;
-            }
-
-            //Wehn Upload complete
-
-            // getDownloadURL(ref(storage,`posts/${doc.id}`))
-            // .then( async () => {
-            //   await setDoc(doc(postRefCollection),{
-            //     postImage:url
-            //   })
-            // })
-          },
-          (error) => {
-            throw new Error(error);
-          },
-          () => {
-            // Handle successful uploads on complete
-            // For instance, get the download URL: https://firebasestorage.googleapis.com/...
-            getDownloadURL(uploadTask.snapshot.ref)
-            .then(
-               (downloadURL) => {
-                console.log("File available at", downloadURL);
-                // await setDoc(doc(postRefCollection), {
-                //   postImage: downloadURL,
-                // });
-              }
-            );
-          }
-        );
+        //   },
+        //   (error) => {
+        //     throw new Error(error);
+        //   },
+        //   () => {
+        //     // Handle successful uploads on complete
+        //     // For instance, get the download URL: https://firebasestorage.googleapis.com/...
+        //     getDownloadURL(uploadTask.snapshot.ref)
+        //     .then(
+        //        (downloadURL) => {
+        //         console.log("File available at", downloadURL);
+        //         // await setDoc(doc(postRefCollection), {
+        //         //   postImage: downloadURL,
+        //         // });
+        //       }
+        //     );
+        //   }
+        // );
       }
       removeImage();
-
     });
     // db.collection("posts").add(docData);
 
